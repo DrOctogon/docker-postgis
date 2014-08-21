@@ -19,6 +19,15 @@ if [ ! "$(ls -A $DATADIR)" ]; then
   su postgres sh -c "$POSTGRES --single -D $DATADIR -c config_file=$CONF" <<< "CREATE USER $USERNAME WITH SUPERUSER PASSWORD '$PASS';"
 fi
 
+# AUFS permissions bug fix
+SSL_TOUCH=/etc/ssl/private/copied
+if [ ! -e "${SSL_TOUCH}" ]; then
+    mv /etc/ssl/private /etc/ssl/_private
+    cp -a /etc/ssl/_private /etc/ssl/private
+    touch ${SSL_TOUCH}
+    rm -rf /etc/ssl/_private
+fi;
+
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 
 su postgres sh -c "$POSTGRES -D $DATADIR -c config_file=$CONF" &
